@@ -135,7 +135,7 @@ const Dashboard = () => {
             </div>
 
 
-            <div className="row">
+         {/*   <div className="row">
                 <div className="col-lg-6 mb-4">
                     
                     <div className="card shadow mb-4">
@@ -162,11 +162,11 @@ const Dashboard = () => {
                     
                 </div>
 
-            </div>
+            </div>*/ }
 
 
 
-</div>
+    </div> 
 
     
         </React.Fragment>

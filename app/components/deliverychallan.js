@@ -3,7 +3,7 @@ import {useToasts } from 'react-toast-notifications'
 import axios from 'axios'
 import { FaSave,FaPlus } from "react-icons/fa";
 import { TiDeleteOutline } from "react-icons/ti";
-import { MdAdd,MdAddCircle, MdDeleteForever } from "react-icons/md";
+import { MdModeEdit,MdAddCircle, MdDeleteForever } from "react-icons/md";
 import $ from 'jquery';
 
 
@@ -23,9 +23,14 @@ const DeliveryChallan = () => {
     const [total_bags, setTotalBags] = useState(''); 
     const [error, setError] = useState(null); 
     const { addToast } = useToasts()
+    const [isUpdate, setUpdate] = useState(false); 
+    const [updateID, setupdateID] = useState(); 
 
     const entered_by=localStorage.getItem('username');
     const [isEnabled, setEnable] = useState(true);
+
+             
+
 
     const boxheading ={
         fontSize:'22px',
@@ -36,6 +41,7 @@ const DeliveryChallan = () => {
        float:'right'
     }
 
+  
     const getPendingChallands = () =>  {
             // Parties Fetching from api
             fetch('http://172.16.1.203:8000/api/getdevchallanfeed')
@@ -103,8 +109,8 @@ const DeliveryChallan = () => {
           }
 
       }, [])
-     
 
+      
       const resetForm = () =>{
         setDcNumber('')
         setPartyID('')
@@ -117,7 +123,6 @@ const DeliveryChallan = () => {
             $('#exampleModal').modal('toggle');
 
        }
-
 
     const handleSubmit = (event) => {
         event.preventDefault();
@@ -140,7 +145,68 @@ const DeliveryChallan = () => {
             console.log(e)
             setEnable(true)
         });
+    
+
+ }
+
+    //delete challan
+    const handleDelete = (e) => {
+        axios.post("http://172.16.1.203:8000/api/deleteDevChallanFeed", {
+            id:e
+        }).then(result => {
+          if (result.status === 200) 
+             addToast('Delivery Challan ID #' + e +  ' Deleted.', { appearance: 'warning', autoDismiss: true})
+             getPendingChallands()
+        }).catch(e => {
+            console.log(e)
+        });
     }
+
+    //openupdate popup
+    const openUpdate = (e) => {
+        setUpdate(true)
+
+        const result = challans.find(challan => (challan.id === e));
+        setDcNumber(result.dc_number)
+        setPartyID(result.party_id)
+        setItemID(result.item_id)
+        setDcNumber(result.dc_number)
+        setFarmerName(result.farmer_name)
+        setCity(result.city)
+        setFare(result.fare)
+        setTotalBags(result.total_bags)
+
+        setupdateID(result.id)
+        
+        $('#exampleModal').modal('toggle');
+    }
+
+    
+    const handleUpdate = () => {
+        event.preventDefault();
+        
+        axios.post("http://172.16.1.203:8000/api/updateDevChallanFeed", {
+         updateID,
+         dc_number,
+         party_id,
+         item_id,
+         farmer_name,
+         city,
+         fare,
+         total_bags,
+         entered_by
+     }).then(result => {
+       if (result.status === 200) 
+          setEnable(false)
+          addToast('Delivery Challan Updated Successfully', { appearance: 'success', autoDismiss: true})
+          resetForm()
+          getPendingChallands()
+     }).catch(e => {
+         console.log(e)
+         setEnable(true)
+     }); 
+    }
+
 
     return (
         <React.Fragment>
@@ -148,8 +214,8 @@ const DeliveryChallan = () => {
                 <div className="d-sm-flex align-items-center justify-content-between mb-4 title-heading">
                   <h1 className="h3 mb-0 text-gray-800">Delivery Challan</h1>
                 </div>
-                <div className="modal fade" id="exampleModal" tabIndex="-1" role="dialog" aria-labelledby="exampleModalLabel" aria-hidden="true">
-  <div className="modal-dialog" role="document">
+  <div className="modal fade" id="exampleModal" tabIndex="-1" role="dialog" aria-labelledby="exampleModalLabel" aria-hidden="true">
+    <div className="modal-dialog" role="document">
     <div className="modal-content">
       <div className="modal-header">
         <h5 className="modal-title" id="exampleModalLabel">Feed Delivery Challan</h5>
@@ -160,12 +226,12 @@ const DeliveryChallan = () => {
       <div className="modal-body">
         {error ? <p>{error.message}</p> : null}
 
-                <form onSubmit={handleSubmit}>
+                <form onSubmit={ isUpdate ? handleUpdate : handleSubmit}>
                     <div className="row">
                         <div className="col-xl-12">
                             <div className="form-group">
                                     <label htmlFor="dc_number">D.C Number:</label>
-                                    <input type="number" min="1"
+                                    <input type="text" pattern=".{2,30}" title="2 to 30 characters"
                                         className="form-control"
                                         id="dc_number" name ="dc_number"
                                         aria-describedby="emailHelp" 
@@ -263,7 +329,7 @@ const DeliveryChallan = () => {
                         <div className="col-xl-6">
                             <div className="form-group">
                             <label htmlFor="fare">Fare:</label>
-                                    <input type="number" min="1" className="form-control" id="fare" name ="fare"
+                                    <input type="number" min="1" className="form-control" min="10" max="50000" id="fare" name ="fare"
                                     value={fare}
                                     onChange={e => {
                                         setFare(e.target.value);
@@ -276,7 +342,7 @@ const DeliveryChallan = () => {
                         <div className="col-xl-6">
                             <div className="form-group">
                             <label htmlFor="total_bags">Total Bags:</label>
-                                    <input type="number"min="1" className="form-control" id="total_bags" name ="total_bags" 
+                                    <input type="number"min="1" className="form-control" min="1" max="300" id="total_bags" name ="total_bags" 
                                       value={total_bags}
                                       onChange={e => {
                                         setTotalBags(e.target.value);
@@ -289,7 +355,22 @@ const DeliveryChallan = () => {
                     </div>
                  </div>
                  <hr/>
-                    <button type="submit"  className="btn btn-light  float-right"> <FaSave /> Save </button>                 
+
+                { isUpdate ? (
+                     <button type="submit"  className="btn btn-secondary  float-right"> 
+                        <FaSave /> Update
+                     </button>  
+                  ) : (
+                    <button type="submit"  className="btn btn-secondary  float-right"> 
+                        <FaSave /> Save
+                     </button>  
+                  )}
+
+                
+
+                               
+
+
                  </form>
 
 
@@ -304,8 +385,10 @@ const DeliveryChallan = () => {
                     <div className="card">
                         <div className="card-header">
                              Delivery Challan (Feed)
-                            <button type="button"  className="btn btn-success float-right" data-toggle="modal"
-                             data-target="#exampleModal" data-whatever="@mdo"><MdAddCircle size={20} /> ADD NEW FEED CHALLAN </button>
+                            <button type="button" 
+                            onClick={() => { resetForm()}}
+                            id="addbutton" className="btn btn-default float-right" 
+                            data-toggle="modal" data-target="#exampleModal" data-whatever="@mdo"><MdAddCircle size={30} /> </button>
                         </div>
                         <div className="card-body">
                         <table className="table table-striped">
@@ -341,12 +424,19 @@ const DeliveryChallan = () => {
                                     <td>{fare}</td>
                                     <td>{entered_by}</td>
                                     <td>{created_on}</td>
-                                    <td><button className="btn btn-sm btn-danger"
-                                    onClick={e =>
-                                        window.confirm("Are you sure you wish to delete this item?") 
-                                    }
+                                    <td>
+
+                                    <button className="btn btn-sm btn-default"
+                                        onClick={(e) => { openUpdate(id)}}
+                                    ><MdModeEdit size={20} color={'black'}/></button> &nbsp;
+                                       
+                                     <button className="btn btn-sm btn-default"
+                                        onClick={(e) => { if(window.confirm('Are you sure you wish to delete this item?')) {handleDelete(id)};}}
+                                    ><MdDeleteForever size={20} color={'black'}/></button>
                                     
-                                    ><MdDeleteForever size={20} color={'white'}/></button></td>
+                                    
+                                    
+                                    </td>
                              </tr>
                         );
                          })
