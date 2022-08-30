@@ -34,7 +34,7 @@
     "react": "^16.9.0",
     "react-dom": "^16.9.0",
     "react-icons": "^3.7.0",
-    "react-live-clock": "^3.1.0",
+    "react-live-clock": "^6.0.6",
     "react-router-dom": "^5.0.1",
     "react-toast-notifications": "^2.2.5",
     "socket.io-client": "^2.2.0",
